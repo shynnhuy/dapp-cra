@@ -9,6 +9,7 @@ import NFT from "../contracts/NFT.json";
 import Market from "../contracts/Market.json";
 
 import config from "../config.json";
+import { useNavigate } from "react-router-dom";
 const { marketAddress, nftAddress } = config;
 
 const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
@@ -16,6 +17,7 @@ const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 const Create = () => {
   const [fileUrl, setFileUrl] = useState(null);
   const inputFileRef = useRef(null);
+  const navigate = useNavigate();
   const [formInput, updateFormInput] = useState({
     price: 0,
     name: "",
@@ -70,6 +72,7 @@ const Create = () => {
       value: listingPrice,
     });
     await transaction.wait();
+    navigate("/");
   };
 
   return (

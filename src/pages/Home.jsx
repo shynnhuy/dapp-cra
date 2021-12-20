@@ -48,13 +48,32 @@ const Home = () => {
     setNfts(listNFT);
     setLoadingState("loaded");
   };
+
+  const buyNFT = async (nft) => {
+    const web3Modal = new Web3Modal();
+    const connection = await web3Modal.connect();
+    const provider = new ethers.providers.Web3Provider(connection);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(marketAddress, Market.abi, signer);
+
+    const price = ethers.utils.parseUnits(nft.price.toString(), "ether");
+
+    const transaction = await contract.buyMarketItem(nftAddress, nft.tokenId, {
+      value: price,
+    });
+    await transaction.wait();
+
+    loadNFTs();
+  };
+
   if (loadingState === "loaded" && !nfts.length)
     return <Typography variant="h3">No items in marketplace</Typography>;
+
   return (
     <Box>
       <Grid container spacing={2}>
         {nfts.map((nft, i) => (
-          <Grid item xs={12} md={4} lg={3}>
+          <Grid item xs={12} md={6} lg={4} key={i}>
             <Card>
               <Image src={nft.image} alt={nft.name} height={300} />
               <Box
@@ -78,7 +97,12 @@ const Home = () => {
                 </Typography>
               </Box>
               <Box padding={2} paddingTop={0}>
-                <Button fullWidth variant="contained" color="success">
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="success"
+                  onClick={() => buyNFT(nft)}
+                >
                   <Typography variant="button">
                     Buy with {nft.price} ETH
                   </Typography>

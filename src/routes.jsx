@@ -3,6 +3,7 @@ import App from "./App";
 import Home from "./pages/Home";
 import MyNFT from "./pages/MyNFT";
 import Create from "./pages/Create";
+import Creator from "./pages/Creator";
 
 const Router = () => {
   return useRoutes([
@@ -21,6 +22,10 @@ const Router = () => {
         {
           path: "my-assets",
           element: <MyNFT />,
+        },
+        {
+          path: "creator",
+          element: <Creator />,
         },
       ],
     },

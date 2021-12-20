@@ -9,6 +9,7 @@ const pages = [
   { title: "Home", href: "/" },
   { title: "Create Digital Asset", href: "/create" },
   { title: "My Digital Asset", href: "/my-assets" },
+  { title: "Creator Dashboard", href: "/creator" },
 ];
 
 const Header = () => {

@@ -4,7 +4,10 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Market is ReentrancyGuard {
+import "hardhat/console.sol";
+import "./NFT.sol";
+
+contract Market is ReentrancyGuard, NFT {
     using Counters for Counters.Counter;
 
     Counters.Counter private _itemIds;
@@ -13,7 +16,7 @@ contract Market is ReentrancyGuard {
     address payable owner;
     uint256 listingPrice = 0.02 ether;
 
-    constructor() {
+    constructor() NFT(address(this)) {
         owner = payable(msg.sender);
     }
 
@@ -85,6 +88,7 @@ contract Market is ReentrancyGuard {
         payable
         nonReentrant
     {
+        IERC721 token = IERC721(nftContract);
         uint256 price = marketItems[itemId].price;
         uint256 tokenId = marketItems[itemId].tokenId;
         require(
@@ -92,15 +96,53 @@ contract Market is ReentrancyGuard {
             "Please submit the asking price in order to complete the purchase"
         );
 
-        marketItems[itemId].seller.transfer(msg.value);
+        console.log("owner ", IERC721(nftContract).ownerOf(tokenId));
+        console.log("sender ", msg.sender);
+        console.log("market ", address(this));
+        console.log("market ", nftContract);
+        console.log("approved ", IERC721(nftContract).getApproved(tokenId));
 
-        IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
+        marketItems[itemId].seller.transfer(msg.value);
+        // msg.sender.approve(nftContract, tokenId);
         marketItems[itemId].owner = payable(msg.sender);
         marketItems[itemId].sold = true;
 
         _itemsSold.increment();
 
+        token.transferFrom(address(this), msg.sender, tokenId);
         payable(owner).transfer(listingPrice);
+    }
+
+    function sellMyNft(uint256 itemId, uint256 price)
+        public
+        payable
+        nonReentrant
+    {
+        uint256 tokenId = marketItems[itemId].tokenId;
+
+        require(price > 0, "Price of item must be at least 1 wei");
+        require(
+            msg.value == listingPrice,
+            "Price must be equal to listing price"
+        );
+        // IERC721(nftContract).setApprovalForAll(msg.sender, true);
+        // console.log("owner ", IERC721(nftContract).ownerOf(tokenId));
+        // console.log("sender ", msg.sender);
+        // console.log("approved ", IERC721(nftContract).getApproved(tokenId));
+        sellToken(msg.sender, address(this), tokenId);
+        // token.safeTransferFrom(msg.sender, address(this), tokenId);
+
+        // _transfer(ownerOf(tokenId), address(this), token)
+        // safeTransferFrom(msg.sender, address(this), tokenId);
+
+        marketItems[itemId].sold = false;
+        marketItems[itemId].seller = payable(msg.sender);
+        marketItems[itemId].owner = payable(address(0));
+        marketItems[itemId].price = price;
+
+        _itemsSold.decrement();
+
+        payable(msg.sender).transfer(listingPrice);
     }
 
     function getMarketItems() public view returns (MarketItem[] memory) {
